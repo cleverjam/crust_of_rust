@@ -18,21 +18,21 @@ impl<'a> Iterator for StrSplit<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         /*
-         * This is an interesting one, self.remainder is not a mutable reference,
-         * but because self is a mutable reference, we can modify the value remainder
-         * points to!
-         *           '&mut &'a str' from a 'Option<&'a str>'
+         * the ? returns the Some(T) if present,
+         * otherwise ends current fn and returns None.
+         * Note:
+         * let ref mut remainder = self.remainder?;
+         * Does not move remainder out, because &str implements Copy trait,
+         * therefore it just copies it, meaning the a new remainder value is created
+         * and modifying does not affect self.remainder.
          */
-        if let Some(ref mut remainder) = self.remainder {
-            if let Some(next_delim) = remainder.find(self.delimiter) {
-                let next = &remainder[..next_delim];
-                *remainder = &remainder[next_delim + self.delimiter.len()..];
-                Some(next)
-            } else {
-                self.remainder.take()
-            }
+        let remainder = self.remainder.as_mut()?;
+        if let Some(next_delim) = remainder.find(self.delimiter) {
+            let next = &remainder[..next_delim];
+            *remainder = &remainder[next_delim + self.delimiter.len()..];
+            Some(next)
         } else {
-            None
+            self.remainder.take()
         }
     }
 }
